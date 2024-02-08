@@ -1,0 +1,95 @@
+---
+title: "HW5"
+author: "Haiyue Peng"
+date: "2023-10-26"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Q1
+
+```{r}
+library(faraway)
+data(teengamb)
+teengamb$loggamble = log(teengamb$gamble + 1)
+result <- lm(formula = loggamble ~ sex + status + income + verbal, data = teengamb)
+cook <- cooks.distance(result)
+halfnorm(cook, nlab=2, ylab="Cook's distance")
+result.6 <- lm(formula = loggamble ~ sex + status + income + verbal, data = teengamb, subset = (cook < max(cook)))
+summary(result.6)
+summary(result)
+```
+
+Compared to the original model, P-value of sex and status in the new model is larger than 0.05, which reflects that sex and status no longer have effect on the response. The 6th point is influential point since its removal from the dataset would cause a big change in the fit. 
+
+```{r}
+r <- rownames(teengamb)
+result.5 <- lm(formula = loggamble ~ sex + status + income + verbal, data = teengamb, subset = r[r != "5"])
+summary(result.5)
+```
+Compared to the original model, P-value of status in the new model is larger than 0.05, which reflects that status no longer has effect on the response. The 5th point is also influential point since its removal from the dataset would cause a big change in the fit. 
+
+## Q2
+
+(a) 
+
+```{r}
+data(divusa)
+m1 <- lm(formula = divorce ~ unemployed + femlab + marriage + birth + military, data = divusa)
+X <- model.matrix(m1)[, -1]
+e <- eigen(t(X) %*% X)
+round(sqrt(e$val[1]/e$val), 3)
+```
+
+Condition number measures the collinearity of a matrix.
+The condition number of X in this model is 25.151, which shows that the collinearity is not a big problem in this model. 
+
+(b)
+```{r}
+round(vif(X), 3)
+```
+
+None of the above VIFs is large, so there is no evidence that collinearity causes some predictors not to be significant. 
+
+(c)
+```{r}
+summary(m1)
+```
+From the summary we notice that predictors "unemployed" and "military" are not significant. 
+
+```{r}
+m2 <- lm(formula = divorce ~ femlab + marriage + birth, data = divusa)
+X <- model.matrix(m2)[, -1]
+e <- eigen(t(X) %*% X)
+round(sqrt(e$val[1]/e$val), 3)
+round(vif(X), 3)
+```
+
+The conditional number is smaller, so the removal of insignificant predictors reduces the collinearity. 
+
+## Q3
+
+(a)
+```{r}
+data("longley")
+m3 <- lm(formula = Employed ~ GNP.deflator + GNP + Unemployed + Armed.Forces + Population + Year, data = longley)
+X <- model.matrix(m3)[, -1]
+e <- eigen(t(X) %*% X)
+round(sqrt(e$val[1]/e$val), 3)
+```
+The conditional number 5751.216 is large, so the data has strong collinearity. 
+
+(b)
+```{r}
+round(cor(X), 2)
+```
+The correlation between GNP.deflator, GNP, Population and Year is large. 
+
+(c)
+```{r}
+round(vif(X), 3)
+```
+The VIF value of GNP.deflator, GNP, Population and Year is large. 

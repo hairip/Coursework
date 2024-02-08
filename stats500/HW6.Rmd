@@ -1,0 +1,77 @@
+---
+title: "HW6"
+author: "Haiyue Peng"
+date: "2023-11-03"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1.
+```{r}
+library(faraway)
+data(sat)
+```
+
+(a) Ordinary Least Squares
+```{r}
+model_ols <- lm(formula = total ~ takers + ratio + salary, data = sat)
+summary(model_ols)
+```
+In this case, all predictors are significant. 
+
+(b) Least Absolute Deviations
+```{r}
+library(quantreg)
+model_lad <- rq(formula = total ~ takers + ratio + salary, data = sat)
+summary(model_lad)
+```
+In this case, none of the predictors is significant since their 95% CI don't include 0. 
+
+(c) Huber's Robust Regression
+```{r}
+library(MASS)
+model_huber <- rlm(formula = total ~ takers + ratio + salary, data = sat)
+summary(model_huber)
+```
+```{r}
+tvalue <- summary(model_huber)$coefficients[,"t value"]
+2 * (1 - pt(abs(tvalue), df = 46))
+```
+In this case, all predictors are significant. 
+
+If we compare these three models, OLS and Huber's have similar result, but LAD is not quite valid. 
+
+# 2.
+```{r}
+library(faraway)
+data(cheddar)
+model <- lm(taste ~ Acetic + H2S + Lactic, data = cheddar)
+summary(model)
+```
+
+(a)
+```{r}
+time <- 1:nrow(cheddar)
+resid <- residuals(model)
+plot(time, resid)
+```
+
+(b)
+```{r}
+library(nlme)
+model_gls <- gls(taste ~ Acetic + H2S + Lactic, data = cheddar, correlation = corAR1(form = ~ time))
+summary(model_gls)
+```
+From the output we notice that the parameter of AR(1) correlation is 0.2641944, so it does appear that there is some correlation structure. 
+
+(c)
+```{r}
+model_time = lm(taste ~ Acetic + H2S + Lactic + time, data = cheddar)
+summary(model_time)
+```
+Compared to the original model, the R-square increased and the p-value of predictor "time" is larger than 0.05. Therefore, predictor "time" is significant in regression model. 
+
+(d) AR(1) autocorrelation consider the relationship between $x_i$ and $x_{i+1}$, while OLS model with "time" consider the relationship between each $x_i$ with $i$. 

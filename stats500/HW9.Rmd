@@ -1,0 +1,74 @@
+---
+title: "HW9"
+author: "Haiyue Peng"
+date: "2023-11-29"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1.
+
+```{r}
+library(MASS)
+library(faraway)
+data(seatpos)
+model1 <- lm.ridge(hipcenter ~ ., lambda = seq(0, 50, 1), data = seatpos)
+matplot(model1$lambda, t(model1$coef), type = "l", lty = 1, xlab = expression(lambda), ylab = expression(hat(beta)))
+select(model1)
+```
+
+The appropriate lambda for this ridge regression model is 22, which is the 23th lambda in the sequence. 
+
+```{r}
+library(Metrics)
+pre1 <- cbind(1, as.matrix(seatpos[, -9])) %*% coef(model1)[23, ]
+rmse(pre1, seatpos$hipcenter)
+```
+
+```{r}
+model2 <- lm(hipcenter ~ ., data = seatpos)
+pre2 <- predict(model2)
+rmse(pre2, seatpos$hipcenter)
+```
+Comparing these two regression model, OLS has smaller RMSE. This suggest that the OLS model is not overfitting, so the panelty in ridge regression is not necessary. 
+
+## 2. 
+# (a) Linear regression
+```{r}
+data(fat)
+all <- setdiff(names(fat), c("brozek", "density"))
+predictors <- setdiff(names(fat), c("brozek", "density", "siri"))
+test_indices <- seq(10, nrow(fat), by = 10)
+test_data <- fat[test_indices, all]
+train_data <- fat[-test_indices, all]
+model_ols <- lm(siri ~ ., data = train_data)
+pre_ols <- predict(model_ols, test_data[, predictors])
+rmse(pre_ols, test_data$siri)
+```
+ 
+# (b) Ridge regression
+```{r}
+model_rid <- lm.ridge(siri ~ ., lambda = seq(0, 0.05, 0.001), data = train_data)
+lambda_rid <- which.min(model_rid$GCV)
+lambda_rid
+pre_rid <- cbind(1, as.matrix(test_data[, predictors])) %*% coef(model_rid)[lambda_rid, ]
+rmse(pre_rid, test_data$siri)
+```
+
+# (c) Lasso regression
+```{r}
+library(glmnet)
+x_train <- model.matrix(siri ~ ., train_data)[, -1]
+y_train <- train_data$siri
+x_test <- model.matrix(siri ~ ., test_data)[, -1]
+y_test <- test_data$siri
+model_las <- cv.glmnet(x_train, y_train, alpha=1, lambda = seq(0.1, 0.9, by = 0.05))
+lambda_las <- model_las$lambda.min
+lambda_las
+pre_las <- predict(model_las, s = lambda_las, newx = x_test)
+rmse(pre_las, y_test)
+```
+Comparing the MSE of each model, lasso regression with lambda = 0.15 has the smallest MSE, and the original OLS has the largest MSE. We can infer that the original OLS has some issue on overfitting, and thus adding a proper penalty is a good way to solve this. 

@@ -1,0 +1,57 @@
+---
+title: "HW4"
+author: "Haiyue Peng"
+date: "2023-10-18"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.height=3.5, fig.width=2, fig.align = "center")
+```
+
+## 1.
+
+```{r}
+library(faraway)
+data(teengamb)
+m1 <- lm(formula = gamble ~ sex + status + income + verbal, data = teengamb)
+plot(m1$fitted, m1$residual, xlab="Fitted", ylab="Residuals")
+abline(h=0)
+```
+The original regression model's residuals do not center at 0, which means that linearity assumption is not satisfied in this model. 
+
+```{r}
+teengamb$loggamble = log(teengamb$gamble + 1)
+m2 <- lm(formula = loggamble ~ sex + status + income + verbal, data = teengamb)
+plot(m2$fitted, m2$residual, xlab="Fitted", ylab="Residuals")
+abline(h=0)
+```
+The log regression model's residuals center at 0, which means that linearity assumption is satisfied in this model
+
+```{r}
+plot(m1$fitted.values, abs(m1$residuals), xlab="Fitted", ylab="|Residuals|")
+summary(lm(abs(m1$residuals) ~ m1$fitted.values))
+```
+From the graph we notice that the absolute values of residuals seem to be a non-constant. By fitting $|\hat{e_i}| ~ \hat{y_i}$ and testing $H_0: \beta_1 = 0$, we reject $H_0$ since the p-value<0.05. This shows that the original model does not satisfy the constant variance assumption. 
+
+```{r}
+plot(m2$fitted.values, abs(m2$residuals), xlab="Fitted", ylab="|Residuals|")
+summary(lm(abs(m2$residuals) ~ m2$fitted.values))
+```
+From the graph we notice that the absolute values of residuals seem to be a constant. By fitting $|\hat{e_i}| ~ \hat{y_i}$ and testing $H_0: \beta_1 = 0$, we don't reject $H_0$ since the p-value>0.05. This shows that the log model satisfies the constant variance assumption. 
+
+## 2.
+```{r}
+qqnorm(m2$residuals, ylab="Residuals")
+qqline(m2$residuals)
+hist(m2$residuals)
+```
+From both qq-plot and histogram, the residuals satisfy normality assumption. 
+
+```{r}
+t <- rstudent(m2)
+max(abs(t))
+2*(1-pt(max(abs(t)), df=40))
+0.05/40
+```
+Since p-value>$\alpha / n$, we don't reject $H_0$. Then there is no outlier in the log regression model.

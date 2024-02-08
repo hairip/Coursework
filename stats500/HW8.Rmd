@@ -1,0 +1,84 @@
+---
+title: "HW8"
+author: "Haiyue Peng"
+date: "2023-11-13"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1. 
+```{r}
+library(faraway)
+library(MASS)
+data(prostate)
+```
+
+# (a) Backward Elimination
+```{r}
+model1 <- lm(lpsa ~., data = prostate)
+summary(model1)
+```
+The largest p-value is 0.77503 > 0.05, so we try to drop the corresponding predictor 'gleason'. 
+```{r}
+model1 <- update(model1, . ~ . - gleason)
+summary(model1)
+```
+The largest p-value is 0.25127 > 0.05, so we try to drop the corresponding predictor 'lcp'. 
+```{r}
+model1 <- update(model1, . ~ . - lcp)
+summary(model1)
+```
+The largest p-value is 0.25331 > 0.05, so we try to drop the corresponding predictor 'pgg45'. 
+```{r}
+model1 <- update(model1, . ~ . - pgg45)
+summary(model1)
+```
+The largest p-value is 0.169528 > 0.05, so we try to drop the corresponding predictor 'age'. 
+```{r}
+model1 <- update(model1, . ~ . - age)
+summary(model1)
+```
+The largest p-value is 0.11213 > 0.05, so we try to drop the corresponding predictor 'lbph'. 
+
+```{r}
+model1 <- update(model1, . ~ . - lbph)
+summary(model1)
+```
+Now that all p-value are smaller than 0.05, and the R-squared is 62.64%. In conclusion, the "best" model we derive from backward elimination method is lpsa ~ lcavol + lweight + svi. 
+
+# (b) AIC
+```{r}
+model2 <- lm(lpsa ~., data = prostate)
+step(model2)
+```
+The "best" model we derive from backward elimination method is lpsa ~ lcavol + lweight + age + lbph + svi. 
+
+# (c) Adjusted R-squared
+```{r}
+library(leaps)
+model3 <- regsubsets(lpsa ~., data = prostate)
+rs <- summary(model3)
+rs
+plot(1:8, rs$adjr2, xlab = "No. of Parameters", ylab = "Adjusted Rsq")
+which.max(rs$adjr2)
+```
+The "best" model we derive from backward elimination method is lpsa ~ lcavol + lweight + age + lbph + svi + lcp + pgg45. 
+
+# (d) Mallows Cp
+```{r}
+plot(1:8, rs$cp, xlab = "No. of Parameters", ylab = "Adjusted Cp")
+which.min(rs$cp)
+```
+The "best" model we derive from backward elimination method is lpsa ~ lcavol + lweight + lbph + svi. 
+
+## 2. 
+```{r}
+data(trees)
+trees$LogVolume <- log(trees$Volume)
+model4 <- lm(LogVolume ~ poly(Girth, 2, raw = T) * poly(Height, 2, raw = T), data = trees)
+summary(model4)
+```
+I don't think it is reasonable to eliminate any term in this regression. When we fit a polynomial regression with interaction terms, the goal is to capture more complex relationships between the predictors and the response variable that wouldn't be accounted for in a linear model. Eliminating any of these terms could potentially hurt the comprehensiveness of the model, especially if there's reason to believe from the subject matter or preliminary data exploration that these more complex patterns exist.

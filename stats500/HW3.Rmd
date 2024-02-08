@@ -1,0 +1,90 @@
+---
+title: "HW3"
+author: "Haiyue Peng"
+date: "2023-09-25"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Problem 1
+
+```{r}
+library(faraway)
+data(gala)
+```
+
+(a)
+```{r}
+m1 <- lm(formula = Endemics ~ Area + Elevation + Nearest + Scruz + Adjacent, data = gala)
+summary(m1)
+```
+
+t-test statistic = $0.119$, p-value = $0.9066$, not rejecting $H_0$ on $\alpha = 0.05$ level. 
+
+```{r}
+confint(m1)
+```
+95% confidence intervals for $\beta_{Nearest}$ is $(-0.4132086, 0.4635555)$. 
+
+(b) 
+```{r}
+m2 <- lm(formula = Endemics ~ Area + Elevation + Adjacent, data = gala)
+anova(m1, m2)
+```
+P-value for this test is 0.3042. 
+
+Since the p-value is greater than 0.05, we don't refuse $H_0$, which means that these two factor have no effect on the response. 
+
+(0,0) would be inside the 95% confidence region, which means that there is a 95% probability that this interval contains the true population coefficients. As our null hypothesis suggests that these two coefficients are indeed zero, being inside the 95% confidence region is consistent with not rejecting the null hypothesis.
+
+(c) $H_0: \beta_{Elevation} > 0$, $H_A: \beta_{Elevation} \le 0$. It is a one-sided test. 
+
+t-test statistic = $0.083530$, p-value = $1 - 0.00000583 \div 2 = 0.99999759$, not rejecting $H_0$ on $\alpha = 0.01$ level. Therefore, a large highest elevation level tends to have more endemic speicies. 
+
+## Problem 2
+```{r}
+data(sat)
+```
+
+(a) 
+```{r}
+sat1 <- lm(formula = total ~ takers + ratio + salary, data = sat)
+summary(sat1)
+```
+R-squared is close to 1, so a large proportion of the variability in the outcome has been explained by the regression model. 
+
+(b) $H_0: \beta_{ratio} = 0$, $H_A: \beta_{ratio} \ne 0$. 
+
+Using the R output from (a), test statistic value = $-2.187$, p-value = $0.0339$, rejecting $H_0$ on $\alpha = 0.05$ level. The conclusion is that ratio has an effect on the SAT scores.
+
+(c) $H_0: \beta_{ratio} < 0$, $H_A: \beta_{ratio} \ge 0$. 
+
+test statistic value = $-2.187$, p-value = $0.0339 \div 2 = 0.169 > 0.05$, not rejecting $H_0$ on $\alpha = 0.05$ level. Therefore, a higher value of ratio tends to lead to a lower sat score. 
+
+(d) 
+```{r}
+sat2 <- lm(formula = total ~ 1, data = sat)
+anova(sat1, sat2)
+```
+F statistic value = 71.721, p-value < 2.2e-16. This hypothesis is rejected. 
+
+This hypothesis means that none of these predictors has impact on the response. Our result shows that at least one of these predictors has impact on the response. 
+
+(e) 
+```{r}
+sat3 <- lm(formula = total ~ takers + ratio + salary + expend, data = sat)
+summary(sat3)
+```
+Compared to the model in (a), the significance of the estimated regression coefficients of takers, ratio and salary dropped. And since adjusted R-square decreased, we can conclude that the model in (a) fits better than the model in (e). 
+
+(f)
+```{r}
+sat4 <- lm(formula = total ~ expend, data = sat)
+anova(sat3, sat4)
+```
+F statistic value = 58.119, p-value = 1.62e-15, the hypothesis is rejected. 
+
+Based on entire analysis, these predictors have an effect on the response. 

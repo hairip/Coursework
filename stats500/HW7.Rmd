@@ -1,0 +1,94 @@
+---
+title: "HW7"
+author: "Haiyue Peng"
+date: "2023-11-06"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1.
+```{r}
+library(faraway)
+data(aatemp)
+attach(aatemp)
+```
+
+(a)
+```{r}
+model_ori <- lm(temp ~ year)
+summary(model_ori)
+```
+There is a linear trend since the p-value of coefficient < 0.05. 
+
+(b)
+```{r}
+library(nlme)
+model_gls <- gls(temp ~ year, correlation = corAR1(form = ~ year))
+intervals(model_gls)
+```
+Since the CI of Phi does not include 0, observations in successive years is correlated. This does not change my opinion of the linear trend. 
+
+```{r}
+model_poly <- lm(temp ~ poly(year, 10))
+summary(model_poly)
+```
+The 10's term is not significant, so we keep eliminating terms. 
+```{r}
+model_poly <- lm(temp ~ poly(year, 9))
+summary(model_poly)
+model_poly <- lm(temp ~ poly(year, 8))
+summary(model_poly)
+model_poly <- lm(temp ~ poly(year, 7))
+summary(model_poly)
+model_poly <- lm(temp ~ poly(year, 6))
+summary(model_poly)
+model_poly <- lm(temp ~ poly(year, 5))
+summary(model_poly)
+```
+Until now the highest degree term is significant. Therefore, this is the ultimate polynomial model. 
+```{r}
+predict(model_poly, newdata = data.frame(year = 2020))
+```
+The estimated temperature in 2020 is 60.07774. 
+
+(d)
+```{r}
+year0 <- as.numeric((year - 1930) * I(year <= 1930))
+year1 <- as.numeric((year - 1930) * I(year > 1930))
+model_spl <- lm(temp ~ year0 + year1)
+summary(model_spl)
+```
+Since the coefficient of year before 1930 is significant and coefficient of year after 1930 is not significant, this claim is not valid. Instead, the temperature had a linear trend until 1930 and then became a constant. 
+
+(e)
+```{r}
+library(splines)
+knots <- c(min(year), min(year), min(year), seq(min(year), max(year), length = 6), max(year), max(year), max(year))
+byear <- splineDesign(knots, year)
+model_cubic <- lm(temp ~ byear)
+matplot(year, byear, type = 'l')
+matplot(year, cbind(temp, model_cubic$fit, model_spl$fit, model_poly$fit), type = 'plll', pch = 1)
+```
+The model fit is similar to polynomial model in (c). They all performed better than the model in (d). 
+
+# 2.
+```{r}
+data(ozone)
+attach(ozone)
+library(MASS)
+model <- lm(O3 ~ temp + humidity + ibh)
+boxcox(model, plotit = T)
+```
+The best $\hat{\lambda} \approx \frac{1}{3}$
+
+```{r}
+model_boxcox <- lm((O3)^(1/3) ~ temp + humidity + ibh)
+summary(model_boxcox)
+plot(model$fitted, model$residual, xlab="Fitted", ylab="Residuals")
+plot(model_boxcox$fitted, model_boxcox$residual, xlab="Fitted", ylab="Residuals")
+```
+
+When the transformation on response is $y^{\frac{1}{3}}$, the model fits well and the residual's diagnostic plot is centered at 0. 

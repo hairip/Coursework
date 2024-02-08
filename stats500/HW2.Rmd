@@ -1,0 +1,132 @@
+---
+title: "HW2"
+author: "Haiyue Peng"
+date: "2023-09-16"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Problem 1
+
+```{r}
+library(faraway)
+data(uswages)
+```
+
+1. 
+```{r}
+uswages <- uswages[uswages$exper >= 0, ]
+model1 <- lm(formula = wage ~ educ + exper, data = uswages)
+summary(model1)
+```
+2. R-squared: 13.48%
+
+3. 
+```{r}
+res <- model1$residuals
+which.max(res)
+```
+The case number is 15387. 
+
+4. 
+```{r}
+mean(res)
+median(res)
+```
+The mean is larger than the median because the residual is right skewed. 
+
+5. The difference would be 9.3287, the estimation of the coefficient on predictor "experience". 
+
+6. 
+```{r}
+fit <- fitted(model1)
+cor(fit, res)
+```
+The correlation approximately equals to 0. 
+
+![](1.png)
+
+From the geometric interpretation we know that residuals and fitted values are orthoginal. 
+
+## Problem 2
+
+By $\hat{\beta} = (X'X)^{-1}X'Y$, 
+$$
+e = Y-\hat{Y} = Y - X\hat{\beta} = Y - X(X'X)^{-1}X'Y = (I - X(X'X)^{-1}X')Y
+$$
+
+Let $H = I - X(X'X)^{-1}X'$, we have
+$$
+e = HY = H(X\beta + \epsilon) = HX\beta + H\epsilon 
+$$
+where
+$$
+HX\beta = (I - X(X'X)^{-1}X')X\beta = X\beta - X(X'X)^{-1}X'X\beta = X\beta - X\beta = 0
+$$
+
+Therefore, $\hat{\sigma} = H\epsilon$. Then
+$$
+RSS = \epsilon'H'H\epsilon = \epsilon'(I - X(X'X)^{-1}X')'(I - X(X'X)^{-1}X')\epsilon=\epsilon'H\epsilon
+$$
+
+By assumption we know that $E(\epsilon'\epsilon) = \sigma^2$. 
+$$
+tr(H) = tr(I_{n \times n}) - tr(X(X'X)^{-1}X')  = n - tr(X'X(X'X)^{-1}) = n - tr(I_{(p+1) \times (p+1)}) = n - (p+1)
+$$
+
+Therefore,
+$$
+E(RSS) = E(\epsilon'H\epsilon) = E(tr(\epsilon'H\epsilon)) = tr(H) E(\epsilon'\epsilon) = (n - (p + 1))\sigma^2
+$$
+
+By definition, 
+$$
+E(\hat{\sigma}^2) = \frac{E(RSS)}{n - (p + 1)} = \sigma^2
+$$
+
+## Problem 3
+```{r}
+x <- 1:20
+y <- x + rnorm(20)
+```
+
+Using $lm$:
+```{r}
+model1 <- lm(formula = y ~ x)
+summary(model1)
+```
+
+Using OLS formula for this model:
+```{r}
+(t(x) %*% x)^-1 %*% t(x) %*% y
+```   
+
+Using $lm$ with polynomials of 2 degrees:
+```{r}
+model2 <- lm(formula = y ~ x + I(x^2))
+summary(model2)
+```
+Using OLS formula for this model:
+```{r}
+x2 = matrix(c(x, x^2), ncol=2)
+solve(t(x2) %*% x2, ) %*% t(x2) %*% y
+```   
+
+Using $lm$ with polynomials of 3 degrees:
+```{r}
+model3 <- lm(formula = y ~ x + I(x^2) + I(x^3))
+summary(model3)
+```
+
+Using OLS formula for this model:
+```{r}
+x3 = matrix(c(x, x^2, x^3), ncol=3)
+solve(t(x3) %*% x3, ) %*% t(x3) %*% y
+```  
+
+The direct calculation method fail at 3 degrees. 
+
+When we generate $x$ and $y$, their real relationship is linear. Therefore, using higher degree polynomial in regression formula makes model easier to misjudge the relationship between $x$ and $y$. In conclusion, the model fails at 3 degree because including higher degree polynomials will make it more prone to overfit. 
